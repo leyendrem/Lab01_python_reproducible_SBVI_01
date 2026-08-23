@@ -1,6 +1,6 @@
 # Registro de Contribuciones y Rotación de Roles.
 
-De acuerdo con los lineamientos del laboratorio, los dos integrantes del equipo participamos activamente en el desarrollo y hemos rotado por las diferentes responsabilidades.
+De acuerdo con los lineamientos del laboratorio, los integrantes del equipo participamos activamente en el desarrollo y hemos rotado por las diferentes responsabilidades.
 
 ## Integrantes del Equipo
 * **Cristian Stiven Capera Cerquera**
