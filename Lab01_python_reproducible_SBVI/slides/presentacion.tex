@@ -1,0 +1,135 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{siunitx}
+
+\title{Laboratorio 1}
+\subtitle{Python científico reproducible}
+\author{Cristian Stiven Capera, Ana Sofia García, Jeimmy Andrea Gonzáles, Karol Mariana Gutiérrez y Brayan Andrés Ruiz}
+\date{\today}
+
+\begin{document}
+
+% Diapositiva 1: Portada
+\begin{frame}
+    \titlepage
+\end{frame}
+
+% Diapositiva 2: Problema y arquitectura (Secciones 7.1 y 7.4)
+\begin{frame}{Problema y arquitectura}
+    \begin{block}{Pregunta de Trabajo y Enfoque}
+        ¿Puede el equipo reconstruir en un computador distinto un análisis reproducible y legible, entendiendo que como ingenieros no siempre tendremos el privilegio de usar nuestros propios equipos?
+    \end{block}
+    \vspace{-0.1cm}
+    \begin{itemize}
+        \small
+        \item \textbf{Reproducibilidad:} Garantizar que el código corra en cualquier equipo de computación externo sin requerir copias manuales del entorno virtual ni ajustes de rutas.
+        \item \textbf{Legibilidad y Estándares:} Escribir código limpio y estructurado que cualquier persona pueda leer, evaluar y mantener fácilmente.
+        \item \textbf{Arquitectura Modular:} Separación de responsabilidades en carpetas (\texttt{src/}, \texttt{tests/}, \texttt{scripts/}) controladas mediante \texttt{uv}.
+    \end{itemize}
+\end{frame}
+
+% Diapositiva 3: Métodos y validación (Secciones 7.5, 7.6, 7.7 y 7.10)
+\begin{frame}{Métodos y validación}
+    \begin{columns}[T]
+        \column{0.5\textwidth}
+        \textbf{Matemática y Simulación:}
+        \begin{itemize}
+            \small
+            \item Semilla determinista $\text{seed} = 42$ y $\Delta t = 0.05\text{ s}$.
+            \item Modelo de señal cruda: $x_{\text{raw}}(t) = \sin(2\pi \cdot 0.5 t) + 0.2 \cdot \mathcal{N}(0,1)$
+            \begin{itemize}
+                \tiny
+                \item Onda senoidal de frecuencia de 0.5Hz y ruido gaussiano.
+            \end{itemize}
+            \item Variante centrada de la señal cruda, se le resta la media temporal.
+            \item Estadística descriptiva, RMS y desviación estándar con $ddof=1$.
+            \item Matriz de Mezcla ($\mathbf{A}$) bien condicionada:
+            $\mathbf{A} = \begin{pmatrix} 2.0 & 1.0 \\ 1.0 & 3.0 \end{pmatrix}$.
+        \end{itemize}
+        
+        \column{0.5\textwidth}
+        \textbf{Control de Calidad y Pruebas:}
+        \begin{itemize}
+            \small
+            \item Validación cruzando listas y conjuntos: analizando \texttt{observed = [SYNTH\_A, SYNTH\_B, SYNTH\_A]} frente a requeridos \texttt{\{SYNTH\_A, SYNTH\_B, REFERENCE\}}.
+            \begin{itemize}
+                \tiny
+                \item Duplicados: Detectó \texttt{SYNTH\_A}.
+                \item Faltantes: Ausencia de \texttt{REFERENCE}.
+                \item Rechazo de nombres vacíos.
+            \end{itemize}
+            \item Derivada e integración numérica:
+            \begin{itemize}
+                \tiny
+                \item Dev: Diferencias finitas para evaluar sensibilidad al ruido.
+                \item Int: Validación trapezoidal con función $t^2$.
+            \end{itemize}
+            \item Pruebas unitarias exitosas con \texttt{pytest}.
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+% Diapositiva 4: Resultados y Evidencia.
+\begin{frame}{Resultados y Evidencia Generada}
+    \begin{columns}[T]
+        \column{0.45\textwidth}
+        \centering
+        \textbf{Visualización del Pipeline}
+        \vspace{0.05cm}
+        \includegraphics[width=0.70\linewidth]{figures/summary.png}
+        \tiny
+        \begin{itemize}
+            \item \textbf{Panel A/B/C:} Comparativa de señal cruda y centrada, Histograma de amplitudes de la señal centrada, y Derivada numérica en el intervalo $[1.0, 2.0]$ segs.
+        \end{itemize}
+        
+        \column{0.55\textwidth}
+        \textbf{Artefactos Dinámicos (Generados por \texttt{reproduce.py}):}
+        \vspace{0.05cm}
+        \begin{itemize}
+            \small
+            \item \textbf{\texttt{results/stats.json}:}
+            \begin{itemize}
+                \tiny
+                \item Estadísticas descriptivas de la señal cruda y centrada con unidades en mV ($ddof=1$).
+            \end{itemize}
+            \item \textbf{\texttt{results/summary\_table.tex}:}
+            \begin{itemize}
+                \tiny
+                \item Tabla LaTeX insertada de forma dinámica en el informe sin transcripción manual.
+            \end{itemize}
+            \item \textbf{\texttt{results/quality\_report.json}:}
+            \begin{itemize}
+                \tiny
+                \item Reporte de validación de canales y rechazo de nombres vacíos.
+            \end{itemize}
+            \item \textbf{\texttt{results/algebra\_report.json}:}
+            \begin{itemize}
+                \tiny
+                \item Verificación de formas, número de condición y recuperación de canales por álgebra lineal.
+            \end{itemize}
+            \item \textbf{\texttt{results/derivation\_integration\_report.json}:}
+            \begin{itemize}
+                \tiny 
+                \item Métricas de error (RMS/Máximo) de la derivada y validación de integración.
+            \end{itemize}
+        \end{itemize}
+    \end{columns}
+\end{frame}
+
+% Diapositiva 5: Reproducibilidad y limitaciones (Secciones 7.3 y 7.9)
+\begin{frame}{Reproducibilidad y limitaciones}
+    \begin{itemize}
+        \item \textbf{Curva de Aprendizaje y Herramientas:} Retos operativos iniciales en el equipo para dominar la manipulación estricta de entornos con \texttt{uv}, analizar el código fuente de forma automática para detectar errores, problemas de lógica, e inconsistencias con \texttt{Ruff} y automatización vía scripts.
+        \item \textbf{Reproducibilidad Lograda:} A pesar de las dificultades técnicas, se consolidó un pipeline capaz de reconstruir el análisis en cualquier equipo mediante comandos limpios.
+        \item \textbf{Limitación Analítica y Alcance:} El sistema opera puramente sobre señales sintéticas controladas; no es extrapolable a datos fisiológicos reales.
+    \end{itemize}
+\end{frame}
+
+\end{document}
