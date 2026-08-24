@@ -161,14 +161,14 @@ La Tabla~\ref{tab:resultados} presenta los valores estadísticos calculados din�
 \end{table}
 
 \subsection{Recuperación Matricial}
-La matriz $\mathbf{A}$ configurada presentó un número de condición $\kappa(\mathbf{A}) \approx 1.22$, confirmando un sistema bien condicionado. La resolución numérica logró recuperar los canales sintéticos originales con un error RMS de reconstrucción del orden de $10^{-16}$, cumpliendo ampliamente la tolerancia permitida.
+La matriz $\mathbf{A}$ configurada presentó un número de condición $\kappa(\mathbf{A}) \approx 1.35$, confirmando un sistema bien condicionado. La resolución numérica logró recuperar los canales sintéticos originales con un error RMS de reconstrucción del orden de $10^{-16}$, cumpliendo ampliamente la tolerancia permitida.
 
 \subsection{Visualización Multisección}
 La Figura~\ref{fig:summary} exhibe el resultado gráfico de 3 paneles generado en la ruta \texttt{figures/summary.png}:
 \begin{itemize}
     \item \textbf{Panel Superior:} Comparación temporal de la señal cruda frente a la señal centrada.
     \item \textbf{Panel Central:} Histograma de amplitud demostrando la distribución centrada en cero.
-    \item \textbf{Panel Inferior:} Comportamiento de la derivada exacta de la señal en el intervalo recortado $[1.0, 2.0]\,\si{\second}$.
+    \item \textbf{Panel Inferior:} Comportamiento de la derivada numerica de la señal en el intervalo recortado $[1.0, 2.0]\,\si{\second}$.
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -179,9 +179,10 @@ La Figura~\ref{fig:summary} exhibe el resultado gráfico de 3 paneles generado e
 \end{figure}
 
 \section{Suite de Pruebas Unitarias}
-El proyecto integra un conjunto de 10 pruebas unitarias distribuidas en 5 módulos dentro de \texttt{tests/}:
+El proyecto integra un conjunto de 31 pruebas unitarias distribuidas en 6 módulos dentro de \texttt{tests/}:
 \begin{itemize}
     \item \texttt{test\_quality.py}: Valida la detección de duplicados, faltantes y excepciones ante nombres vacíos o de espacios en blanco.
+     \item \texttt{test\_simulation.py}: Verifica la forma y el eje temporal de la señal sintética, su reproducibilidad ante semillas iguales y su variación ante semillas distintas, el centrado a media cero y la generación de datos de álgebra lineal.
     \item \texttt{test\_statistics.py}: Verifica los valores estadísticos esperados, casos de una sola muestra y rechazo de valores no finitos (\texttt{NaN}, \texttt{Inf}).
     \item \texttt{test\_didactic\_transformation.py}: Confirma la resolución matricial $2 \times 2$ y valida las excepciones ante matrices no cuadradas o de dimensiones erróneas.
     \item \texttt{test\_numerical.py}: Evalúa la precisión del cálculo de derivadas e integrales frente a soluciones analíticas cuadráticas y senoidales.
