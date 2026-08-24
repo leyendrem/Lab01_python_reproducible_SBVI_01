@@ -10,7 +10,10 @@ def three_panel_figure(
     derivative_end: float = 2.0,
 ) -> plt.Figure:
     """Tres paneles: señal, histograma y derivada recortada"""
-
+    time = np.asarray(time, dtype=float)
+    raw_signal = np.asarray(raw_signal, dtype=float)
+    derivative = np.asarray(derivative, dtype=float)
+    
     if time.ndim != 1 or raw_signal.ndim != 1 or derivative.ndim != 1:
         raise ValueError("Tiempo y señal deben ser unidimensionales.")
     if not time.shape == raw_signal.shape == derivative.shape:
