@@ -1,0 +1,209 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{siunitx}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\title{Laboratorio 1: Python Científico Legible y Reproducible}
+\author{Integrantes: Cristian Stiven Capera Cerquera, Ana Sofía García Gutiérrez,\\
+Jeimmy Andrea Gonzáles Gordillo, Karol Mariana Gutiérrez Gutiérrez y Brayan Andrés Ruiz Cortés}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Este informe presenta el desarrollo e implementación de un pipeline científico en Python diseñado bajo principios de reproductibilidad estricta. El sistema permite reejecutar el análisis numérico completo (generación de datos sintéticos, validaciones de calidad, estadísticas descriptivas, transformaciones lineales y calculo numérico) en cualquier entorno sin transferir entornos virtuales ni modificar rutas manualmente. La arquitectura modular se apoya en \texttt{uv} para el control determinista de dependencias, \texttt{ruff} para el formateo estático, \texttt{pytest} para la suite de pruebas unitarias y \LaTeX\ para la compilación automatizada del informe técnico.
+\end{abstract}
+
+\section{Identificación y Pregunta de Trabajo}
+La consolidación del laboratorio se fundamenta en la siguiente pregunta central de investigación y desarrollo: \textbf{¿Es posible reconstruir en un equipo totalmente independiente un pipeline de análisis científico que conserve exactamente los mismos parámetros, señales sintéticas, métricas estadísticas, transformaciones lineales y figuras de salida, sin copiar el entorno virtual ni editar rutas de código?}
+
+\section{Arquitectura del Proyecto}
+El repositorio implementa una separación estricta de responsabilidades en la carpeta \texttt{src/}, aislando la lógica numérica de los scripts de ejecución e informes. La estructura física general se distribuye de la siguiente manera:
+
+\begin{verbatim}
+lab01_python_reproducible_SBVI/
+|-- .python-version
+|-- pyproject.toml
+|-- uv.lock
+|-- README.md
+|-- build/
+|   |-- reports/
+|   `-- slides/
+|-- data/
+|   |-- raw/
+|   `-- processed/
+|       |-- processed_signals.csv
+|-- figures/
+|   `-- summary.png
+|-- reports/
+|   `-- informe.tex
+|-- slides/
+|   `-- presentacion.tex
+|-- scripts/
+|   `-- reproduce.py
+|-- src/
+|   `-- python_scientific/
+|       |-- quality.py
+|       |-- descriptive_statistics.py
+|       |-- didactic_transformation.py
+|       |-- numerical.py
+|       |-- three_panel_figure.py
+|       |-- simulation.py
+|       `-- make_json_serializable.py
+|-- tests/
+|   |-- test_quality.py
+|   |-- test_statistics.py
+|   |-- test_didactic_transformation.py
+|   |-- test_numerical.py
+|   |-- test_visualization.py
+|   `-- test_simulation.py
+`-- results/
+    |-- algebra_report.json
+    |-- contributions.md
+    |-- delivery_manifest.txt
+    |-- derivation_integration_report.json
+    |-- quality_report.json
+    |-- stats.json
+    `-- summary_table.tex
+
+\end{verbatim}
+
+\noindent\ La Tabla~\ref{tab:auditoria} audita el flujo de datos, transformaciones y la condición de regeneración automática de cada carpeta y componente clave.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Auditoría de estructura, responsabilidades y regeneración del proyecto.}
+  \label{tab:auditoria}
+  \small
+  \begin{tabular}{p{2.5cm} p{3.2cm} p{3.2cm} p{3.2cm} c}
+    \toprule
+    \textbf{Archivo / Carpeta} & \textbf{Entrada} & \textbf{Transformación} & \textbf{Salida} & \textbf{Regenerable} \\
+    \midrule
+    \texttt{pyproject.toml} & Definición de metadatos y dependencias & Configura el entorno y las reglas de formato (\texttt{ruff}) & Configuración estandarizada del proyecto & Sí \\
+    \addlinespace
+    \texttt{uv.lock} & Versiones de paquetes declaradas & Bloquea las versiones milimétricas exactas de las dependencias & Entorno determinista para sincronización & Sí \\
+    \addlinespace
+    \texttt{src/} & Funciones de lógica y parámetros base & Aplica modelos numéricos, validaciones de canales y procesamiento & Módulos reutilizables para scripts y pruebas & No \\
+    \addlinespace
+    \texttt{tests/} & Código fuente en \texttt{src/} y datos sintéticos de prueba & Ejecuta validaciones de contratos vía \texttt{pytest} & Informes de estado de pruebas unitarias & Sí \\
+    \addlinespace
+    \texttt{data/raw/} & Entradas externas o parámetros iniciales & Almacena las mediciones crudas base para el pipeline & Datos de entrada listos para consumo del sistema & No \\
+    \addlinespace
+    \texttt{data/processed/} & Datos crudos y parámetros de limpieza & Limpia, normaliza y ajusta los datos en bruto & Series procesadas para análisis estadístico y matemático & Sí \\
+    \addlinespace
+    \texttt{results/} & Datos procesados y scripts de cálculo & Computa estadísticas, matrices, derivadas e integrales & Tablas formateadas en \LaTeX\ (\texttt{.summary\_table.tex}) y JSON & Sí \\
+    \addlinespace
+    \texttt{figures/} & Arreglos numéricos de resultados & Genera gráficos analíticos multipanel mediante \texttt{matplotlib} & Archivos de imagen de alta resolución (\texttt{.png}) & Sí \\
+    \addlinespace
+    \texttt{reports/} & Estructura de texto y salidas de \texttt{results/} y \texttt{figures/} & Compila el documento técnico integrando tablas y figuras dinámicas & Informes y presentaciones en formato PDF final & Sí \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Métodos}
+\subsection{Generación de señales y parámetros iniciales}
+Los experimentos numéricos utilizan un generador estocástico determinista bajo la semilla $\text{seed} = 42$ con paso de muestreo $\Delta t = 0,02\text{ s}$ ($f_s = 50\text{ Hz}$) en un rango de $t \in [0.0, 10.0]\text{ s}$. La señal cruda incorpora una componente continua, dos armónicos principales y ruido:
+\begin{equation}
+    x_{\text{raw}}(t) = 0.15 + \sin(2\pi \cdot 0.5 t) + 0.25 \sin(2\pi \cdot 10 t) + 0.08 \cdot \mathcal{N}(0,1)
+    \label{eq:senal_sintetica}
+\end{equation}
+Adicionalmente, se genera una señal centrada $x_{\text{centered}}(t) = x_{\text{raw}}(t) - \bar{x}_{\text{raw}}$ para eliminar el desplazamiento de nivel continuo (DC offset).
+
+\subsection{Configuración de parámetros explícitos}
+\begin{itemize}
+    \item \textbf{Control de calidad:} Evaluación del arreglo observado \texttt{["SYNTH\_A", "SYNTH\_B", "SYNTH\_A"]} frente al conjunto requerido \verb|{"SYNTH_A", "SYNTH_B", "REFERENCE"}|.
+    \item \textbf{Transformación matricial:} Se implementa una matriz de mezcla $2 \times 2$:
+    \begin{equation}
+        \mathbf{A} = \begin{pmatrix} 0.10 & 1.00 \\ 1.00 & 0.20 \end{pmatrix}
+        \label{eq:matriz_A}
+    \end{equation}
+    aplicada sobre dos canales ortogonales $c_1(t) = \sin(2\pi \cdot 0.05 t)$ y $c_2(t) = \cos(2\pi \cdot 0.1 t)$ definiendo el sistema $\mathbf{y} = \mathbf{A} \mathbf{x}$.
+\end{itemize}
+
+\section{Validación y Métodos Numéricos}
+
+\subsection{Control de Calidad (\texttt{quality.py})}
+La función \texttt{validate\_channel\_configuration} analiza la consistencia de los canales detectando duplicados mediante seguimiento de presencia en conjuntos (\texttt{set}) y determinando faltantes o adicionales mediante diferencia de conjuntos. El módulo valida estrictamente que los nombres no contengan cadenas vacías ni únicamente espacios en blanco.
+
+\subsection{Estadística Descriptiva (\texttt{descriptive\_statistics.py})}
+Se calculan métricas de tendencia central y dispersión para arreglos 1D finitos. La desviación estándar muestral utiliza grados de libertad $ddof = 1$. Para evaluar la energía y la variabilidad global, se incorporan el Rango Intercuartílico ($\text{IQR} = Q_3 - Q_1$) y el Valor Eficaz ($\text{RMS} = \sqrt{\frac{1}{N}\sum x_i^2}$).
+
+\subsection{Álgebra Lineal (\texttt{didactic\_transformation.py})}
+El sistema $\mathbf{y} = \mathbf{A} \mathbf{x}$ evalúa la estabilidad numérica mediante el número de condición $\kappa(\mathbf{A}) = \|\mathbf{A}\| \|\mathbf{A}^{-1}\|$. La recuperación de canales se realiza con \texttt{np.linalg.solve(A, y)}. La reconstrucción se valida bajo una tolerancia absoluta estricta ($\text{atol} = 1\times 10^{-7}$), evaluando el error cuadrático medio (RMS) entre los canales originales y los recuperados.
+
+\subsection{Derivación e Integración (\texttt{numerical.py})}
+La derivada temporal se calcula mediante diferencias finitas centradas centradas en el interior y de segundo orden en las fronteras usando \texttt{np.gradient}. El error se contrasta frente a la derivada analítica exacta:
+\begin{equation}
+    f'(t) = 2\pi \cdot 0.5 \cos(2\pi \cdot 0.5 t) + 0.25 \cdot 2\pi \cdot 10 \cos(2\pi \cdot 10 t)
+\end{equation}
+La integración numérica utiliza la regla trapezoidal acumulada (\texttt{cumulative\_trapezoidal\_integral}) y total (\texttt{trapezoidal\_integral}). El uso de la señal centrada resulta indispensable en la integración acumulada para evitar tendencias lineales crecientes indeseadas causadas por el componente DC.
+
+\section{Resultados y Discusión}
+
+\subsection{Auditoría de Canales}
+El reporte de calidad registó correctamente la duplicación del canal \texttt{SYNTH\_A} y la ausencia del canal requerido \texttt{REFERENCE}, confirmando la captura preventiva de inconsistencias antes del procesamiento.
+
+\subsection{Estadísticas de la Señal}
+La Tabla~\ref{tab:resultados} presenta los valores estadísticos calculados dinámicamente por el ejecutor automatizado.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Resumen estadístico de las señales generado automáticamente por el pipeline.}
+  \label{tab:resultados}
+  \input{results/summary_table.tex}
+\end{table}
+
+\subsection{Recuperación Matricial}
+La matriz $\mathbf{A}$ configurada presentó un número de condición $\kappa(\mathbf{A}) \approx 1.22$, confirmando un sistema bien condicionado. La resolución numérica logró recuperar los canales sintéticos originales con un error RMS de reconstrucción del orden de $10^{-16}$, cumpliendo ampliamente la tolerancia permitida.
+
+\subsection{Visualización Multisección}
+La Figura~\ref{fig:summary} exhibe el resultado gráfico de 3 paneles generado en la ruta \texttt{figures/summary.png}:
+\begin{itemize}
+    \item \textbf{Panel Superior:} Comparación temporal de la señal cruda frente a la señal centrada.
+    \item \textbf{Panel Central:} Histograma de amplitud demostrando la distribución centrada en cero.
+    \item \textbf{Panel Inferior:} Comportamiento de la derivada exacta de la señal en el intervalo recortado $[1.0, 2.0]\,\si{\second}$.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{figures/summary.png}
+    \caption{Panel integrado de visualización: (Arriba) Comparativa de señal cruda vs. centrada, (Centro) Distribución de amplitudes, y (Abajo) Derivada en el intervalo de interés.}
+    \label{fig:summary}
+\end{figure}
+
+\section{Suite de Pruebas Unitarias}
+El proyecto integra un conjunto de 10 pruebas unitarias distribuidas en 5 módulos dentro de \texttt{tests/}:
+\begin{itemize}
+    \item \texttt{test\_quality.py}: Valida la detección de duplicados, faltantes y excepciones ante nombres vacíos o de espacios en blanco.
+    \item \texttt{test\_statistics.py}: Verifica los valores estadísticos esperados, casos de una sola muestra y rechazo de valores no finitos (\texttt{NaN}, \texttt{Inf}).
+    \item \texttt{test\_didactic\_transformation.py}: Confirma la resolución matricial $2 \times 2$ y valida las excepciones ante matrices no cuadradas o de dimensiones erróneas.
+    \item \texttt{test\_numerical.py}: Evalúa la precisión del cálculo de derivadas e integrales frente a soluciones analíticas cuadráticas y senoidales.
+    \item \texttt{test\_visualization.py}: Comprueba la generación de objetos de figura de Matplotlib y valida errores por incompatibilidad de dimensiones o rangos vacíos.
+\end{itemize}
+
+\section{Instrucciones de Reproducción}
+Para ejecutar el proyecto de forma determinista en cualquier sistema de cómputo, se ejecutan las siguientes instrucciones en la terminal:
+
+\begin{verbatim}
+uv sync --locked
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+uv run python scripts/reproduce.py
+latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build/reports reports/informe.tex
+\end{verbatim}
+
+\section{Limitaciones}
+Aunque las señales sintéticas permiten verificar con precisión los algoritmos, no reproducen completamente la variabilidad ni las interferencias presentes en datos biológicos reales (por ejemplo, artefactos de movimiento o ruido no estacionario). Adicionalmente, el mantenimiento estricto de restricciones de formato y linters exige una rigurosidad inicial que incrementa el tiempo de configuración del entorno de trabajo.
+
+\section{Contribuciones y Rotación de Roles}
+Todos los integrantes del equipo participaron activamente en el diseño, desarrollo, pruebas y documentación del laboratorio, cumpliendo con la rotación de roles establecida en la matriz de contribuciones.
+
+\end{document}
