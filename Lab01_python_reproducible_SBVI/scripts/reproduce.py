@@ -36,7 +36,7 @@ def main() -> None:
     seed = 42
     f0 = 0.5  # Frecuencia base
     duration = 10.0
-    n_samples = 500  # Muestras equivalentes a un dt de 0.02s (10.0 / 0.5)
+    n_samples = 500  # dt = duration / (n_samples - 1) = 10.0 / 499 ≈ 0.02 s
     unit = "mV"
 
     # Creación y aseguramiento de directorios de salida requeridos.
