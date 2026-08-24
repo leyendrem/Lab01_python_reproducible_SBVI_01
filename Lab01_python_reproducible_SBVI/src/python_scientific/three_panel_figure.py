@@ -57,12 +57,9 @@ def three_panel_figure(
             ylabel="Amplitud [mV]",
         )
 
-        # Panel 2: Histograma de amplitudes de la derivada numérica.
-        axes[1].hist(derivative, bins=25, color="#0b8fac", edgecolor="white", alpha=0.9)
-        axes[1].set(
-            title="Distribución de amplitudes de la señal",
-            xlabel="Amplitud [mV]",
-            ylabel="Frecuencia [muestras]",
+                # Panel 2: Histograma de amplitudes de la señal centrada.
+        axes[1].hist(
+            raw_signal_centered, bins=25, color="#0b8fac", edgecolor="white", alpha=0.9
         )
 
         # Panel 3: Derivada numérica en un intervalo recortado (1.0s - 2.0s).
