@@ -147,7 +147,7 @@ Mínimo / Máximo & {stats_raw["minimum"]:.2f} / {stats_raw["maximum"]:.2f} & {s
     # Registro de contribuciones
     contributions_content = r"""# Registro de Contribuciones y Rotación de Roles.
 
-De acuerdo con los lineamientos del laboratorio, los dos integrantes del equipo participamos activamente en el desarrollo y hemos rotado por las diferentes responsabilidades.
+De acuerdo con los lineamientos del laboratorio, los cinco integrantes del equipo participamos activamente en el desarrollo y hemos rotado por las diferentes responsabilidades.
 
 ## Integrantes del Equipo
 * **Cristian Stiven Capera Cerquera**
